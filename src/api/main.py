@@ -119,4 +119,8 @@ def documents() -> JSONResponse:
 
 @app.post("/chat")
 def chat(body: ChatRequest) -> JSONResponse:
-    return JSONResponse(answer(body.message, body.document_id))
+    try:
+        return JSONResponse(answer(body.message, body.document_id))
+    except Exception as exc:
+        logging.getLogger("src.api.main").exception("chat failed")
+        return JSONResponse({"detail": f"{type(exc).__name__}: {exc}"[:500]}, status_code=500)

@@ -10,6 +10,7 @@ from __future__ import annotations
 import gc
 import hashlib
 import json
+import os
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -108,7 +109,8 @@ class BgeEmbedder:
     def __init__(self) -> None:
         from sentence_transformers import SentenceTransformer
 
-        self._model = SentenceTransformer(self.model_name)
+        offline = os.environ.get("HF_HUB_OFFLINE", "").strip() == "1"
+        self._model = SentenceTransformer(self.model_name, local_files_only=offline)
         self._tokenizer = self._model.tokenizer
 
     def count_tokens(self, text: str) -> int:

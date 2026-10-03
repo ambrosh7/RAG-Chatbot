@@ -21,6 +21,10 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements-api.txt \
     && python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-en-v1.5')"
 
+# Use the model saved above. Do not call Hugging Face on each question.
+ENV HF_HUB_OFFLINE=1 \
+    TRANSFORMERS_OFFLINE=1
+
 COPY src ./src
 COPY data/index ./data/index
 COPY start.sh ./start.sh
