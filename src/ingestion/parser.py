@@ -26,11 +26,11 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Sequence
+from typing import TYPE_CHECKING, Iterable, Sequence
 
-import pdfplumber
-import pymupdf
-from bs4 import BeautifulSoup, Tag
+if TYPE_CHECKING:
+    import pymupdf
+    from bs4 import Tag
 
 from src.constants import BLOCKS_PATH, CORPUS, CORPUS_MANIFEST_PATH, PROJECT_ROOT
 
@@ -172,6 +172,8 @@ def parse_file(path: Path, document_id: str) -> list[Block]:
 
 def parse_html(html: bytes | str, *, document_id: str) -> list[Block]:
     """Map a guidance page to blocks. Site chrome is removed first."""
+    from bs4 import BeautifulSoup
+
     if isinstance(html, bytes):
         html = html.decode("utf-8", errors="replace")
     soup = BeautifulSoup(html, "html.parser")
@@ -327,6 +329,12 @@ def write_blocks(blocks: Sequence[Block], path: Path = BLOCKS_PATH) -> None:
             handle.write(json.dumps(block.to_dict(), ensure_ascii=False) + "\n")
 
 
+def _is_html_tag(node: object) -> bool:
+    from bs4 import Tag
+
+    return isinstance(node, Tag)
+
+
 def _strip_chrome(root: Tag) -> None:
     for tag in list(root.find_all(True)):
         if getattr(tag, "attrs", None) is None:
@@ -344,7 +352,7 @@ def _is_chrome(tag: Tag) -> bool:
 
 def _walk_html(node: Tag, add_heading, emit) -> None:
     for child in list(node.children):
-        if not isinstance(child, Tag):
+        if not _is_html_tag(child):
             continue
         name = child.name
         if name in {"h1", "h2", "h3"}:
@@ -388,7 +396,7 @@ def _emit_list_item(item: Tag, emit) -> None:
 def _own_text(item: Tag) -> str:
     parts: list[str] = []
     for child in item.children:
-        if isinstance(child, Tag) and child.name in {"ul", "ol", "table"}:
+        if _is_html_tag(child) and child.name in {"ul", "ol", "table"}:
             continue
         if isinstance(child, str):
             parts.append(child)
@@ -460,6 +468,8 @@ def _expand_html_table(table: Tag) -> list[list[str]]:
 
 
 def _pdf_pages(pdf: bytes) -> list["_PdfPage"]:
+    import pymupdf
+
     document = pymupdf.open(stream=pdf, filetype="pdf")
     pages: list[_PdfPage] = []
     try:
@@ -859,6 +869,8 @@ def _heading_level(size: float, body_size: float) -> int:
 
 
 def _pdf_tables(pdf: bytes) -> list[_PdfTable]:
+    import pdfplumber
+
     found: list[_PdfTable] = []
     with pdfplumber.open(pdf if isinstance(pdf, (str, Path)) else _as_stream(pdf)) as document:
         for index, page in enumerate(document.pages):
