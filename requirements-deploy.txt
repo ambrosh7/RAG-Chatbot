@@ -1,0 +1,6 @@
+streamlit==1.65.0
+chromadb==1.5.9
+sentence-transformers==6.1.0
+groq==1.7.0
+python-dotenv==1.2.4
+httpx==0.28.1

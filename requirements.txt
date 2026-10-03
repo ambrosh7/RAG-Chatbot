@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+pydantic
+python-dotenv
+httpx
+curl_cffi
+beautifulsoup4
+pymupdf
+pdfplumber
+chromadb
+sentence-transformers
+groq
+streamlit
+pytest
