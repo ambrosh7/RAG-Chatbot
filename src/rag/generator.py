@@ -99,10 +99,18 @@ def generate(
     *,
     client: ChatClient | None = None,
 ) -> tuple[DraftDocument, ...]:
-    """Ask for claims. ``groups`` is the only passage text the model sees."""
+    """Ask for claims. ``groups`` is the only passage text the model sees.
+
+    A malformed reply is asked once more. A transport or quota failure is not.
+    """
     chat = client or GroqChatClient()
-    raw = chat.complete(system=SYSTEM_PROMPT, user=build_user_prompt(message, groups))
-    return parse_draft(raw)
+    user = build_user_prompt(message, groups)
+    raw = chat.complete(system=SYSTEM_PROMPT, user=user)
+    try:
+        return parse_draft(raw)
+    except GenerationError:
+        raw = chat.complete(system=SYSTEM_PROMPT, user=user)
+        return parse_draft(raw)
 
 
 def build_user_prompt(message: str, groups: Sequence[DocumentHits]) -> str:

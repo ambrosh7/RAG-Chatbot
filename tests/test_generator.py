@@ -15,6 +15,7 @@ from src.rag.generator import (
     GenerationError,
     GroqChatClient,
     build_user_prompt,
+    generate,
     groq_model_name,
     parse_draft,
 )
@@ -92,6 +93,45 @@ def test_empty_documents_array_is_valid_json() -> None:
     assert parse_draft('{"documents": [{"document_id": "eatwell-guide", "claims": []}]}')[
         0
     ].claims == ()
+
+
+def test_generate_asks_once_more_when_the_first_reply_is_not_json() -> None:
+    replies = iter(
+        (
+            "[",
+            json.dumps(
+                {
+                    "documents": [
+                        {
+                            "document_id": "cold-food-storage",
+                            "claims": [
+                                {
+                                    "text": "Whole chicken keeps 1 to 2 days.",
+                                    "chunk_ids": ["cold-food-storage:24"],
+                                }
+                            ],
+                        }
+                    ]
+                }
+            ),
+        )
+    )
+    calls: list[str] = []
+
+    class Client:
+        def complete(self, *, system: str, user: str) -> str:
+            calls.append(user)
+            return next(replies)
+
+    groups = (
+        DocumentHits(
+            document_id="cold-food-storage",
+            hits=(_hit("Whole chicken keeps 1 to 2 days in the refrigerator."),),
+        ),
+    )
+    draft = generate("How long can I keep a whole chicken in the fridge?", groups, client=Client())
+    assert len(calls) == 2
+    assert draft[0].claims[0].text == "Whole chicken keeps 1 to 2 days."
 
 
 @pytest.mark.parametrize(
