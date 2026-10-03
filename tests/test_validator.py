@@ -89,6 +89,18 @@ def test_two_chunks_from_the_same_document_can_support_one_claim() -> None:
     )
 
 
+def test_bare_chunk_number_resolves_to_the_retrieved_id() -> None:
+    stored = hit("cold-food-storage", "cold-food-storage:24", "Refrigerator time is 1 to 2 days.")
+    result = _check(
+        "cold-food-storage",
+        "Refrigerator time is 1 to 2 days.",
+        ["24"],
+        [stored],
+    )
+    assert result.dropped == ()
+    assert result.sections[0].claims[0].chunk_ids == ("cold-food-storage:24",)
+
+
 def test_missing_chunk_is_dropped() -> None:
     stored = hit("cold-food-storage", "cold-food-storage:24", "Refrigerator time is 1 to 2 days.")
     result = _check(

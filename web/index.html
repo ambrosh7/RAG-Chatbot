@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Dietary guidance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Source+Sans+3:wght@400;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/src/styles.css" />
+  </head>
+  <body>
+    <div class="desk">
+      <aside class="ledger" aria-label="Scope">
+        <p class="kicker">Official guidance</p>
+        <h1>Dietary guidance</h1>
+        <p class="disclaimer" id="disclaimer"></p>
+
+        <div class="sheet">
+          <label class="slug" for="document">Corpus register</label>
+          <select id="document">
+            <option value="">All documents</option>
+          </select>
+          <p class="slug index-label">Indexed documents</p>
+          <ol class="index" id="index"></ol>
+        </div>
+
+        <div class="inquiries">
+          <p class="slug">Example inquiries</p>
+          <div id="examples"></div>
+        </div>
+
+        <p class="stamp" id="stamp">Loading the register…</p>
+      </aside>
+
+      <div class="folio">
+        <p class="banner" id="banner" hidden></p>
+        <ol class="thread" id="thread">
+          <li class="empty" id="empty">
+            <p class="slug">Reading desk</p>
+            <p class="empty-copy">The desk is clear. Choose an example, or ask about the guidance.</p>
+          </li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="composer-bar">
+      <div class="composer-frame">
+      <form class="composer" id="composer">
+        <p class="status" id="status" hidden>Searching the guidance…</p>
+        <label class="sr-only" for="message">Ask about the guidance</label>
+        <textarea
+          id="message"
+          name="message"
+          rows="2"
+          placeholder="Ask about the guidance"
+          required
+        ></textarea>
+        <button type="submit" id="send">Ask</button>
+      </form>
+      </div>
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,14 @@
+.git
+.venv
+venv
+__pycache__
+.pytest_cache
+.env
+.streamlit
+tests
+docs
+web
+data/raw
+data/chunks
+data/parsed
+*.md

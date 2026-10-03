@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 from fastapi.testclient import TestClient
 
-from src.api.main import app, index_is_ready
+from src.api.main import app, cors_origins, index_is_ready
 from src.constants import CORPUS
 from src.rag.refusal import generation_unavailable, not_in_corpus, out_of_scope
 
@@ -204,6 +204,42 @@ def test_health_is_unavailable_when_the_index_is_incomplete(
         response = client.get("/health")
     assert response.status_code == 503
     assert response.json() == {"status": "unavailable"}
+
+
+def test_documents_lists_the_registry_in_order() -> None:
+    with _client() as client:
+        response = client.get("/documents")
+    assert response.status_code == 200
+    body = response.json()
+    assert [row["document_id"] for row in body] == [document.document_id for document in CORPUS]
+    assert [row["document_name"] for row in body] == [document.document_name for document in CORPUS]
+    assert body[0]["publisher"] == CORPUS[0].publisher
+    assert body[0]["year"] == CORPUS[0].year
+
+
+def test_browser_origin_is_allowed() -> None:
+    with _client() as client:
+        response = client.get("/documents", headers={"Origin": "https://dietary.vercel.app"})
+    assert response.headers["access-control-allow-origin"] == "*"
+
+
+def test_chat_preflight_allows_a_browser_post() -> None:
+    with _client() as client:
+        response = client.options(
+            "/chat",
+            headers={
+                "Origin": "https://dietary.vercel.app",
+                "Access-Control-Request-Method": "POST",
+                "Access-Control-Request-Headers": "content-type",
+            },
+        )
+    assert response.status_code == 200
+    assert "POST" in response.headers["access-control-allow-methods"]
+
+
+def test_cors_origins_splits_a_host_list(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("CORS_ORIGINS", "https://a.vercel.app, https://b.vercel.app")
+    assert cors_origins() == ["https://a.vercel.app", "https://b.vercel.app"]
 
 
 def test_published_index_health_when_present() -> None:

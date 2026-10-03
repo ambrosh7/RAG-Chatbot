@@ -125,6 +125,7 @@ def validate(sections: Sequence[Section], groups: Sequence[DocumentHits]) -> Val
         available = own_hits.get(section.document_id, {})
         surviving: list[Claim] = []
         for claim in section.claims:
+            claim = _with_resolved_ids(claim, available)
             reason = _drop_reason(claim, section, available, all_hits, registry_url)
             if reason is not None:
                 dropped.append(
@@ -163,6 +164,26 @@ def _drop_reason(
     if not _overlap_supported(claim.text, support):
         return LOW_TERM_OVERLAP
     return None
+
+
+def _with_resolved_ids(claim: Claim, available: dict[str, Hit]) -> Claim:
+    """Accept a bare chunk number when it matches one retrieved id in this document.
+
+    The model sometimes returns ``24`` for the id ``cold-food-storage:24``.
+    """
+    resolved = tuple(_resolve_chunk_id(chunk_id, available) for chunk_id in claim.chunk_ids)
+    if resolved == claim.chunk_ids:
+        return claim
+    return Claim(text=claim.text, chunk_ids=resolved, section_heading=claim.section_heading)
+
+
+def _resolve_chunk_id(chunk_id: str, available: dict[str, Hit]) -> str:
+    if chunk_id in available:
+        return chunk_id
+    matches = [full for full in available if full.endswith(":" + chunk_id)]
+    if len(matches) == 1:
+        return matches[0]
+    return chunk_id
 
 
 def _membership(

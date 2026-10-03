@@ -57,7 +57,13 @@ def answer(
         )
     try:
         draft = generate(message, found.groups, client=client)
-    except GenerationError:
+    except GenerationError as exc:
+        cause = exc.__cause__
+        logger.info(
+            "generation_error=%s status=%s",
+            exc,
+            getattr(cause, "status_code", ""),
+        )
         return _log_turn(
             generation_unavailable(),
             document_scope=document_scope,
